@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->foreignId('badge_id')->constrained();
+            $table->intiger('badge_id')->default();
             $table->rememberToken();
             $table->timestamps();
         });
