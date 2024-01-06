@@ -120,6 +120,29 @@ class User extends Authenticatable
     {
         return $this->unlocked_achievements()->where('name', $achievementName)->exists();
     }
+    public function determineBadge()
+{
+    $achievementCount = $this->unlocked_achievements()->count();
+
+    // Fetch badge data from the 'badges' table
+    $badges = Badge::orderBy('numberOfAchivment', 'desc')->get();
+
+    foreach ($badges as $badge) {
+        if ($achievementCount >= $badge->numberOfAchivment) {
+            $this->assignBadge($badge->id,$badge->name);
+            break; // Stop loop after assigning the highest achievable badge
+        }
+    }
+}
+
+public function assignBadge($badgeId,$badgeName)
+{
+    // Logic to assign a badge id to the user
+    $this->update(['badge_id' => $badgeId]);
+
+    // Fire an event to notify about the badge assignment
+    event(new BadgeUnlocked($badgeName, $this));
+}
 
 }
 
