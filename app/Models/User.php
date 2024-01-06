@@ -66,6 +66,60 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Lesson::class)->wherePivot('watched', true);
     }
-    
+    public function unlockLessonAchievement()
+    {
+        $lessonCount = $this->watched()->count();
+
+        $achievementNames = [
+            1 => 'First Lesson Watched',
+            5 => '5 Lessons Watched',
+            10 => '10 Lessons Watched',
+            25 => '25 Lessons Watched',
+            50 => '50 Lessons Watched',
+        ];
+
+        foreach ($achievementNames as $count => $achievementName) {
+            if ($lessonCount >= $count && !$this->hasUnlockedAchievement($achievementName)) {
+                $this->unlockAchievement($achievementName);
+            }
+        }
+    }
+
+    public function unlockCommentAchievement()
+    {
+        $commentCount = $this->comments()->count();
+
+        $achievementNames = [
+            1 => 'First Comment Written',
+            3 => '3 Comments Written',
+            5 => '5 Comments Written',
+            10 => '10 Comments Written',
+            20 => '20 Comments Written',
+        ];
+        // to prevent duplicated achievement and filter out the new achievement
+        foreach ($achievementNames as $count => $achievementName) {
+            if ($commentCount >= $count && !$this->hasUnlockedAchievement($achievementName)) {
+                $this->unlockAchievement($achievementName);
+            }
+        }
+    }
+
+    public function unlockAchievement($achievementName)
+    {
+        // Logic to unlock an achievement
+        $this->unlocked_achievements()->attach([
+            'name' => $achievementName,
+            'user_id' => $this->id,
+        ]);
+
+        // Fire event to notify about the achievement unlock
+        event(new AchievementUnlocked($achievementName, $this));
+    }
+
+    public function hasUnlockedAchievement($achievementName)
+    {
+        return $this->unlocked_achievements()->where('name', $achievementName)->exists();
+    }
+
 }
 
